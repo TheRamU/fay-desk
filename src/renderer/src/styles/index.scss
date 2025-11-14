@@ -1,0 +1,49 @@
+:root {
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  font-family: Inter,
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
+  Roboto,
+  Oxygen,
+  Ubuntu,
+  Cantarell,
+  'Fira Sans',
+  'Droid Sans',
+  'Helvetica Neue',
+  sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+// 允许特定元素选择文本
+input,
+textarea,
+[contenteditable="true"],
+.el-input__inner,
+.el-textarea__inner {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+// 禁止图片拖拽
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: auto;
+}
+
+.el-message-box__headerbtn,
+.el-dialog__headerbtn {
+  right: 15px;
+  top: 20px;
+}
+
+::selection {
+  background-color: #24d376;
+  color: #fff;
+}

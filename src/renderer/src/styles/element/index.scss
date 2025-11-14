@@ -1,0 +1,83 @@
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  $colors: (
+    'primary': (
+      'base': #0acc86,
+    ),
+    'success': (
+      'base': #379D4A,
+    ),
+    'warning': (
+      'base': #F88C13,
+    ),
+    'danger': (
+      'base': #F4416C,
+    ),
+    'error': (
+      'base': #F4416C,
+    ),
+    'info': (
+      'base': #909399,
+    ),
+  ),
+  $input: (
+    'border-radius': 8px,
+  ),
+  $overlay-color: (
+    'lighter': rgba(0, 0, 0, 0),
+  ),
+  $dialog: (
+    'border-radius': 10px,
+    'padding-primary': 30px,
+  ),
+  $messagebox: (
+    'border-radius': 10px,
+    'padding-primary': 30px,
+  ),
+  $popper: (
+    'border-radius': 10px,
+  )
+);
+
+@use 'element-plus/theme-chalk/src/index.scss' as *;
+
+.el-form-item__label {
+  pointer-events: none;
+
+  .help-icon,
+  .el-tooltip,
+  .el-tooltip__trigger {
+    pointer-events: auto;
+  }
+}
+
+.el-button {
+  border-radius: 8px !important;
+}
+
+.el-popper,
+.context-menu {
+  padding: 5px 8px !important;
+}
+
+.el-select-dropdown__item,
+.el-dropdown-menu__item {
+  border-radius: 6px;
+}
+
+.el-notification.error,
+.el-notification.warn {
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  .el-notification__icon {
+    font-size: 20px;
+  }
+
+  .el-notification__title {
+    font-weight: normal;
+  }
+}
+
+.el-notification.error .el-notification__title {
+  color: var(--el-color-danger);
+}
