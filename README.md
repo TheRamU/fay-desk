@@ -13,8 +13,9 @@
 
 简体中文 | [English](./README_EN.md)
 
-</div>
+<img src="docs/images/demo.gif" alt="demo" width="800">
 
+</div>
 
 ---
 
