@@ -68,7 +68,7 @@
 **配置 Xmov SDK（可选）**
 
 - 获取 Xmov SDK 密钥
-  - 前往 [魔珐星云](https://xingyun3d.com/) 创建账号
+  - 前往 [魔珐星云](https://c.c1nd.cn/9C9WW) 创建账号
   - 进入 [应用管理](https://xingyun3d.com/workspace/application-manage)，创建一个新的应用
   - 点击右上角 “App密钥” 按钮获取 `App ID` 和 `App Secret`
 - 打开设置页面
@@ -95,6 +95,7 @@
 - [ ] 语音交互
 - [ ] AI 生成壁纸
 - [ ] 离线模式
+- [ ] 仿生记忆
 - [ ] MCP 支持
 
 ## 🔧 开发
@@ -144,7 +145,11 @@ pnpm build:win
 
 - [Fay](https://github.com/xszyou/Fay) - 提供了数字人框架灵感
 - [XmovAvatarSDK](https://github.com/xszyou/XmovAvatarSDK) - 提供了数字人的核心 SDK 示例，实现基于 Xmov 具身驱动技术
-- [魔珐星云](https://xingyun3d.com/) - 提供了数字人 SDK 的云端渲染服务和技术支持
+- [魔珐星云](https://c.c1nd.cn/9C9WW) - 提供了数字人 SDK 的云端渲染服务和技术支持
+
+## ⛺ 微信交流群
+
+<img src="docs/images/wechat.png" alt="wechat" width="500">
 
 ---
 
