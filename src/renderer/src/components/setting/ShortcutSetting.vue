@@ -61,7 +61,11 @@ const onShortcutChange = (key: keyof typeof shortcuts.value, value: string): voi
 
 const autoSaveConfig = async (): Promise<void> => {
   try {
-    if (shortcuts.value.showMainWindow === shortcuts.value.showFloatingWindow) {
+    if (
+      shortcuts.value.showMainWindow &&
+      shortcuts.value.showFloatingWindow &&
+      shortcuts.value.showMainWindow === shortcuts.value.showFloatingWindow
+    ) {
       ElNotification({
         type: 'error',
         customClass: 'error',
@@ -75,9 +79,7 @@ const autoSaveConfig = async (): Promise<void> => {
       showFloatingWindow: shortcuts.value.showFloatingWindow
     })
 
-    if (response.success) {
-      ElNotification({ type: 'error', customClass: 'error', title: '快捷键设置已自动保存' })
-    } else {
+    if (!response.success) {
       ElNotification({
         type: 'error',
         customClass: 'error',
