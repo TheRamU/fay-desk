@@ -14,13 +14,13 @@
           Github
         </el-button>
         <el-button
-          v-if="false"
-          :icon="Refresh"
-          :loading="isCheckingUpdate"
+          :icon="UpdateIcon"
+          :loading="isCheckingUpdate || isDownloading"
+          :disabled="isButtonDisabled"
           class="action-btn"
-          @click="checkForUpdates"
+          @click="handleUpdateButtonClick"
         >
-          检查更新
+          {{ buttonText }}
         </el-button>
       </div>
     </div>
@@ -28,15 +28,41 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { ElMessage, ElNotification } from 'element-plus'
-import { Refresh } from '@element-plus/icons-vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ElNotification } from 'element-plus'
 import GitHubIcon from '@renderer/icons/GitHubIcon.vue'
 import LogoIcon from '@renderer/icons/LogoIcon.vue'
 import packageJson from '../../../../package.json'
+import UpdateIcon from '@renderer/icons/UpdateIcon.vue'
+import type { UpdateStatus } from '@renderer/types/update'
+
 const version = packageJson.version
 
 const isCheckingUpdate = ref(false)
+const updateStatus = ref<UpdateStatus | null>(null)
+let removeListener: (() => void) | null = null
+
+const isDownloading = computed(() => {
+  return updateStatus.value?.downloading || false
+})
+
+const isDownloaded = computed(() => {
+  return updateStatus.value?.downloaded || false
+})
+
+const buttonText = computed(() => {
+  if (isDownloading.value) {
+    return '正在下载更新'
+  }
+  if (isDownloaded.value) {
+    return '点击重启以更新'
+  }
+  return '检查更新'
+})
+
+const isButtonDisabled = computed(() => {
+  return isCheckingUpdate.value || isDownloading.value
+})
 
 const openGithub = (): void => {
   const githubUrl = 'https://github.com/TheRamU/fay-desk'
@@ -47,20 +73,72 @@ const checkForUpdates = async (): Promise<void> => {
   isCheckingUpdate.value = true
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    const result = await window.api.update.check()
 
-    ElMessage.success('当前已是最新版本')
+    isCheckingUpdate.value = false
+
+    if (!result.success) {
+      ElNotification({
+        type: 'error',
+        customClass: 'error',
+        title: '检查更新失败',
+        message: result.error || '请稍后重试'
+      })
+      return
+    }
+
+    if (result.status?.available) {
+      await window.api.update.download()
+    } else {
+      ElNotification({
+        type: 'success',
+        title: '当前已是最新版本'
+      })
+    }
   } catch (error) {
     console.error('检查更新失败:', error)
+    isCheckingUpdate.value = false
     ElNotification({
       type: 'error',
       customClass: 'error',
-      title: '检查更新失败，请稍后重试'
+      title: '检查更新失败',
+      message: '请稍后重试'
     })
-  } finally {
-    isCheckingUpdate.value = false
   }
 }
+
+const handleUpdateButtonClick = async (): Promise<void> => {
+  if (isDownloaded.value) {
+    await window.api.update.quitAndInstall()
+  } else {
+    await checkForUpdates()
+  }
+}
+
+const loadStatus = async (): Promise<void> => {
+  try {
+    const result = await window.api.update.getStatus()
+    if (result.success && result.status) {
+      updateStatus.value = result.status
+    }
+  } catch (error) {
+    console.error('获取更新状态失败:', error)
+  }
+}
+
+onMounted(async () => {
+  await loadStatus()
+
+  removeListener = window.api.update.onStatusChanged((status: UpdateStatus) => {
+    updateStatus.value = status
+  })
+})
+
+onUnmounted(() => {
+  if (removeListener) {
+    removeListener()
+  }
+})
 </script>
 
 <style scoped lang="scss">

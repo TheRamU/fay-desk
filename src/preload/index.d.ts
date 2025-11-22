@@ -240,6 +240,7 @@ interface CommonSettingConfig {
   autoStartWallpaper: boolean;
   autoStartOnBoot: boolean;
   avatarEnabled: boolean;
+  autoUpdate: boolean;
 }
 
 interface CommonSettingResponse {
@@ -305,6 +306,58 @@ interface ShortcutAPI {
   reset: () => Promise<ShortcutUpdateResponse>;
 }
 
+interface UpdateInfo {
+  version: string;
+  releaseDate: string;
+  releaseName?: string;
+  releaseNotes?: string;
+}
+
+interface UpdateProgress {
+  percent: number;
+  bytesPerSecond: number;
+  transferred: number;
+  total: number;
+}
+
+interface UpdateStatus {
+  checking: boolean;
+  available: boolean;
+  downloading: boolean;
+  downloaded: boolean;
+  error: string | null;
+  info: UpdateInfo | null;
+  progress: UpdateProgress | null;
+}
+
+interface UpdateResponse {
+  success: boolean;
+  error?: string;
+}
+
+interface UpdateCheckResponse extends UpdateResponse {
+  info?: UpdateInfo | null;
+  status?: UpdateStatus;
+}
+
+interface UpdateStatusResponse extends UpdateResponse {
+  status?: UpdateStatus;
+}
+
+interface AutoUpdateResponse extends UpdateResponse {
+  autoUpdate?: boolean;
+}
+
+interface UpdateAPI {
+  check: () => Promise<UpdateCheckResponse>;
+  download: () => Promise<UpdateResponse>;
+  quitAndInstall: () => Promise<UpdateResponse>;
+  getStatus: () => Promise<UpdateStatusResponse>;
+  getAutoUpdate: () => Promise<AutoUpdateResponse>;
+  setAutoUpdate: (enabled: boolean) => Promise<UpdateResponse>;
+  onStatusChanged: (callback: (status: UpdateStatus) => void) => () => void;
+}
+
 interface CustomAPI {
   wallpaper: WallpaperAPI;
   tray: TrayAPI;
@@ -314,6 +367,7 @@ interface CustomAPI {
   floating: FloatingAPI;
   commonSetting: CommonSettingAPI;
   shortcut: ShortcutAPI;
+  update: UpdateAPI;
 }
 
 declare global {

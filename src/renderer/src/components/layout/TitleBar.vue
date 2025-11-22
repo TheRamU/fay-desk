@@ -5,6 +5,7 @@ import MinimizeIcon from '@renderer/icons/MinimizeIcon.vue'
 import MaximizeIcon from '@renderer/icons/MaximizeIcon.vue'
 import RestoreIcon from '@renderer/icons/RestoreIcon.vue'
 import WallpaperControls from '@renderer/components/layout/WallpaperControls.vue'
+import UpdateIndicator from '@renderer/components/layout/UpdateIndicator.vue'
 
 const isMaximized = ref(false)
 
@@ -41,6 +42,7 @@ onUnmounted(() => {
   <div class="title-bar">
     <WallpaperControls />
     <div class="title-bar-controls">
+      <UpdateIndicator />
       <div class="title-bar-button" @click="handleMinimize">
         <el-icon :size="16">
           <MinimizeIcon />

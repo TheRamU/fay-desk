@@ -2,6 +2,7 @@ export interface CommonConfig {
   autoStartWallpaper: boolean
   autoStartOnBoot: boolean
   avatarEnabled: boolean
+  autoUpdate: boolean
 }
 
 export interface ChatConfig {

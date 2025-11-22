@@ -9,12 +9,14 @@ import { registerChatHandlers } from './ipc/chatHandler'
 import { registerFloatingHandlers } from './ipc/floatingHandler'
 import { registerCommonSettingHandlers } from './ipc/commonSettingHandler'
 import { registerShortcutHandlers } from './ipc/shortcutHandler'
+import { registerUpdateHandlers } from './ipc/updateHandler'
 import { trayService } from './services/trayService'
 import { mainWindowService } from './services/mainWindowService'
 import { wallpaperLoaderService } from './services/wallpaperLoaderService'
 import { commonConfigService } from './services/commonConfigService'
 import { wallpaperService } from './services/wallpaperService'
 import { globalShortcutService } from './services/globalShortcutService'
+import { updateService } from './services/updateService'
 
 // 解决 Windows 控制台乱码问题
 function setupConsoleEncoding(): void {
@@ -93,6 +95,7 @@ async function initialize(): Promise<void> {
   registerFloatingHandlers()
   registerCommonSettingHandlers()
   registerShortcutHandlers()
+  registerUpdateHandlers()
 
   const isAutoStarted = isStartedFromLogin()
 
@@ -108,6 +111,11 @@ async function initialize(): Promise<void> {
   trayService.create()
 
   globalShortcutService.registerAll()
+
+  // 仅在打包环境下初始化更新服务
+  if (app.isPackaged) {
+    updateService.initialize()
+  }
 
   // 仅在安装环境下设置开机自启动
   if (app.isPackaged) {
@@ -176,5 +184,6 @@ app.on('before-quit', () => {
   })
   globalShortcutService.unregisterAll()
   trayService.destroy()
+  updateService.destroy()
   mainWindowService.clearMainWindow()
 })

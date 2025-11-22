@@ -28,6 +28,7 @@
     "@types/yauzl": "^2.10.3",
     "axios": "^1.13.2",
     "electron-as-wallpaper": "2.0.3",
+    "electron-updater": "^6.6.2",
     "element-plus": "^2.11.7",
     "openai": "^6.8.1",
     "pinia": "^3.0.4",

@@ -5,8 +5,9 @@ const CONFIG_KEY = 'common_config'
 
 const DEFAULT_CONFIG: CommonConfig = {
   autoStartWallpaper: false,
-  autoStartOnBoot: true, // 默认开启开机自启动
-  avatarEnabled: true // 默认开启数字人
+  autoStartOnBoot: true,
+  avatarEnabled: true,
+  autoUpdate: true
 }
 
 class CommonConfigService {
@@ -104,6 +105,10 @@ class CommonConfigService {
       return false
     }
 
+    if (typeof config.autoUpdate !== 'boolean') {
+      return false
+    }
+
     return true
   }
 
@@ -129,6 +134,14 @@ class CommonConfigService {
 
   setAvatarEnabled(enabled: boolean): boolean {
     return this.update({ avatarEnabled: enabled })
+  }
+
+  getAutoUpdate(): boolean {
+    return this.get().autoUpdate
+  }
+
+  setAutoUpdate(enabled: boolean): boolean {
+    return this.update({ autoUpdate: enabled })
   }
 }
 

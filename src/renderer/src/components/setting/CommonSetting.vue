@@ -5,6 +5,7 @@ import SettingCard from '@renderer/components/setting/SettingCard.vue'
 const autoStartWallpaper = ref(false)
 const autoStartOnBoot = ref(true)
 const avatarEnabled = ref(true)
+const autoUpdate = ref(true)
 const loading = ref(false)
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -17,6 +18,7 @@ const loadConfig = async (): Promise<void> => {
       autoStartWallpaper.value = response.config.autoStartWallpaper
       autoStartOnBoot.value = response.config.autoStartOnBoot ?? true
       avatarEnabled.value = response.config.avatarEnabled ?? true
+      autoUpdate.value = response.config.autoUpdate ?? true
     }
   } catch (error) {
     console.error('加载通用配置失败:', error)
@@ -31,7 +33,8 @@ const saveConfig = async (): Promise<void> => {
     const response = await window.api.commonSetting.saveConfig({
       autoStartWallpaper: autoStartWallpaper.value,
       autoStartOnBoot: autoStartOnBoot.value,
-      avatarEnabled: avatarEnabled.value
+      avatarEnabled: avatarEnabled.value,
+      autoUpdate: autoUpdate.value
     })
     if (!response.success) {
       console.error('通用配置保存失败:', response.error)
@@ -77,6 +80,11 @@ const onAutoStartOnBootChange = async (value: boolean): Promise<void> => {
   }
 }
 
+const onAutoUpdateChange = (value: boolean): void => {
+  autoUpdate.value = value
+  debouncedSaveConfig()
+}
+
 onMounted(() => {
   loadConfig()
 })
@@ -108,6 +116,21 @@ onMounted(() => {
               :model-value="autoStartWallpaper"
               :disabled="loading"
               @update:model-value="onAutoStartWallpaperChange"
+            />
+          </div>
+        </el-form-item>
+        <el-form-item>
+          <template #label>
+            <div class="label-container">
+              <div>自动更新</div>
+              <div class="form-description">有新版本时自动更新</div>
+            </div>
+          </template>
+          <div class="switch-container">
+            <el-switch
+              :model-value="autoUpdate"
+              :disabled="loading"
+              @update:model-value="onAutoUpdateChange"
             />
           </div>
         </el-form-item>
@@ -150,7 +173,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   line-height: 16px;
-  gap: 8px;
+  gap: 4px;
 }
 
 .form-description {

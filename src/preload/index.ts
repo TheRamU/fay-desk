@@ -214,6 +214,22 @@ const api = {
     setShowFloatingWindow: (shortcut: string) =>
       ipcRenderer.invoke('shortcut:setShowFloatingWindow', shortcut),
     reset: () => ipcRenderer.invoke('shortcut:reset')
+  },
+  // 更新控制
+  update: {
+    check: () => ipcRenderer.invoke('update:check'),
+    download: () => ipcRenderer.invoke('update:download'),
+    quitAndInstall: () => ipcRenderer.invoke('update:quitAndInstall'),
+    getStatus: () => ipcRenderer.invoke('update:getStatus'),
+    getAutoUpdate: () => ipcRenderer.invoke('update:getAutoUpdate'),
+    setAutoUpdate: (enabled: boolean) => ipcRenderer.invoke('update:setAutoUpdate', enabled),
+    onStatusChanged: (callback: (status: any) => void) => {
+      const listener = (_: unknown, status: any): void => callback(status)
+      ipcRenderer.on('update:status-changed', listener)
+      return () => {
+        ipcRenderer.removeListener('update:status-changed', listener)
+      }
+    }
   }
 }
 
