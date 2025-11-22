@@ -65,7 +65,9 @@
 }
 
 .el-notification.error,
-.el-notification.warn {
+.el-notification.warn,
+.el-notification.success,
+.el-notification.info {
   background-color: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(8px);
 

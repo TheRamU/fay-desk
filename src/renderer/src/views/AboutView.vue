@@ -92,6 +92,7 @@ const checkForUpdates = async (): Promise<void> => {
     } else {
       ElNotification({
         type: 'success',
+        customClass: 'success',
         title: '当前已是最新版本'
       })
     }
