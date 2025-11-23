@@ -5,6 +5,7 @@ import { app, dialog } from 'electron'
 import * as yauzl from 'yauzl'
 
 import type { WallpaperInfo, WallpaperConfigFile } from '../types'
+import { copyDirectoryAsync, checkDirectoryNeedsUpdate } from '../utils/fileUtil'
 
 class WallpaperLoaderService {
   private wallpapers: WallpaperInfo[] = []
@@ -45,61 +46,43 @@ class WallpaperLoaderService {
     const resourceWallpapersDir = this.getResourceWallpapersDirectory()
 
     try {
-      let needsCopy = false
+      await fsPromises.mkdir(userDataWallpapersDir, { recursive: true })
 
       try {
-        await fsPromises.access(userDataWallpapersDir)
-        const entries = await fsPromises.readdir(userDataWallpapersDir)
-        if (entries.length === 0) {
-          needsCopy = true
-        }
+        await fsPromises.access(resourceWallpapersDir)
       } catch {
-        needsCopy = true
+        console.warn('[WallpaperLoader] 资源壁纸目录不存在，跳过同步')
+        return
       }
 
-      if (needsCopy) {
+      const resourceEntries = await fsPromises.readdir(resourceWallpapersDir, {
+        withFileTypes: true
+      })
+      const systemWallpapers = resourceEntries.filter((entry) => entry.isDirectory())
+
+      // 同步每个系统壁纸
+      for (const wallpaper of systemWallpapers) {
+        const resourceWallpaperPath = path.join(resourceWallpapersDir, wallpaper.name)
+        const userDataWallpaperPath = path.join(userDataWallpapersDir, wallpaper.name)
+
         try {
-          await fsPromises.access(resourceWallpapersDir)
-          try {
-            await fsPromises.rm(userDataWallpapersDir, { recursive: true, force: true })
-          } catch {
-            // 忽略删除错误
+          await fsPromises.access(userDataWallpaperPath)
+
+          const needsUpdate = await checkDirectoryNeedsUpdate(
+            resourceWallpaperPath,
+            userDataWallpaperPath
+          )
+
+          if (needsUpdate) {
+            await fsPromises.rm(userDataWallpaperPath, { recursive: true, force: true })
+            await copyDirectoryAsync(resourceWallpaperPath, userDataWallpaperPath)
           }
-          await this.copyDirectoryAsync(resourceWallpapersDir, userDataWallpapersDir)
         } catch {
-          await fsPromises.mkdir(userDataWallpapersDir, { recursive: true })
+          await copyDirectoryAsync(resourceWallpaperPath, userDataWallpaperPath)
         }
       }
     } catch (error) {
-      console.error('[WallpaperLoader] 确保壁纸文件夹存在时发生错误:', error)
-      try {
-        await fsPromises.mkdir(userDataWallpapersDir, { recursive: true })
-      } catch (createError) {
-        console.error('[WallpaperLoader] 创建壁纸目录失败:', createError)
-      }
-    }
-  }
-
-  private async copyDirectoryAsync(src: string, dest: string): Promise<void> {
-    try {
-      await fsPromises.mkdir(dest, { recursive: true })
-      const entries = await fsPromises.readdir(src, { withFileTypes: true })
-
-      await Promise.all(
-        entries.map(async (entry) => {
-          const srcPath = path.join(src, entry.name)
-          const destPath = path.join(dest, entry.name)
-
-          if (entry.isDirectory()) {
-            await this.copyDirectoryAsync(srcPath, destPath)
-          } else {
-            await fsPromises.copyFile(srcPath, destPath)
-          }
-        })
-      )
-    } catch (error) {
-      console.error(`[WallpaperLoader] 异步复制目录失败 [${src} -> ${dest}]:`, error)
-      throw error
+      console.error('[WallpaperLoader] 同步系统壁纸时发生错误:', error)
     }
   }
 
@@ -354,7 +337,6 @@ class WallpaperLoaderService {
           fs.mkdirSync(targetDir, { recursive: true })
         }
 
-        let extractedCount = 0
         let hasError = false
 
         zipfile.readEntry()
@@ -391,7 +373,6 @@ class WallpaperLoaderService {
             readStream.pipe(writeStream)
 
             writeStream.on('close', () => {
-              extractedCount++
               zipfile.readEntry()
             })
 
