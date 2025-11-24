@@ -64,7 +64,7 @@ onMounted(async () => {
   <SettingCard
     title="Xmov SDK"
     description="驱动 Xmov 具身数字人"
-    link="https://xingyun3d.com/developers/52-183"
+    link="https://xingyun3d.com/developers/52-183?utm_campaign=1029launch&utm_source=FAYguo"
     link-tip="配置教程"
   >
     <div class="xmov-setting">
