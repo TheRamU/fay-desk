@@ -19,6 +19,15 @@
   let errorHideTimer = null
   let subtitleHideTimer = null
 
+  const IDLE_TIMEOUT = 60 * 1000
+  let idleTimer = null
+  let isOnlineMode = true
+
+  const WAKEUP_DELAY = 2 * 1000
+  let wakeupTime = null
+  let pendingCommands = []
+  let wakeupExecutionTimer = null
+
   const ui = {
     showSubtitle(text) {
       const subtitleEl = document.getElementById('subtitle')
@@ -202,6 +211,8 @@
                 data: { text: event.text }
               })
 
+              resetIdleTimer()
+
               // 10秒超时防止网络掉线导致字幕卡住
               subtitleHideTimer = setTimeout(() => {
                 window.avatarAPI.hideSubtitle()
@@ -262,6 +273,7 @@
           })
       })
 
+      resetIdleTimer()
       window.avatarAPI.showLoading('连接成功')
       window.avatarAPI.setConnected(true)
 
@@ -343,10 +355,152 @@
     }
   }
 
+  // 进入离线模式
+  function enterOfflineMode() {
+    try {
+      if (
+        isOnlineMode &&
+        window.avatarInstance &&
+        typeof window.avatarInstance.offlineMode === 'function'
+      ) {
+        console.log('[Wallpaper Controller] 进入离线模式')
+        window.avatarInstance.offlineMode()
+        isOnlineMode = false
+      }
+    } catch (error) {
+      console.error('[Wallpaper Controller] 进入离线模式失败:', error)
+    }
+  }
+
+  // 恢复在线状态
+  function enterOnlineMode() {
+    try {
+      if (
+        !isOnlineMode &&
+        window.avatarInstance &&
+        typeof window.avatarInstance.onlineMode === 'function'
+      ) {
+        console.log('[Wallpaper Controller] 恢复在线模式')
+        window.avatarInstance.onlineMode()
+        isOnlineMode = true
+      }
+    } catch (error) {
+      console.error('[Wallpaper Controller] 恢复在线模式失败:', error)
+    }
+  }
+
+  // 执行缓存的命令
+  async function executePendingCommands() {
+    if (pendingCommands.length === 0) return
+
+    if (!window.avatarInstance) {
+      pendingCommands = []
+      return
+    }
+
+    const commands = [...pendingCommands]
+    pendingCommands = []
+
+    for (const cmd of commands) {
+      try {
+        if (!window.avatarInstance) {
+          break
+        }
+
+        let result
+        if (cmd.type === 'speak') {
+          result = await speak(cmd.data.text)
+        } else if (cmd.type === 'speakStream') {
+          result = await speakStream(cmd.data.text, cmd.data.isStart, cmd.data.isEnd)
+        }
+
+        // 发送响应
+        if (cmd.id) {
+          sendMessage({ type: 'response', id: cmd.id, result })
+        }
+      } catch (error) {
+        console.error('[Wallpaper Controller] 执行缓存命令失败:', error)
+        if (cmd.id) {
+          sendMessage({
+            type: 'response',
+            id: cmd.id,
+            result: { success: false, error: error.message }
+          })
+        }
+      }
+    }
+  }
+
+  function cancelPendingCommands() {
+    if (pendingCommands.length > 0) {
+      pendingCommands = []
+    }
+    if (wakeupExecutionTimer) {
+      clearTimeout(wakeupExecutionTimer)
+      wakeupExecutionTimer = null
+    }
+  }
+
+  // 重置空闲定时器
+  function resetIdleTimer() {
+    if (idleTimer) {
+      clearTimeout(idleTimer)
+      idleTimer = null
+    }
+
+    enterOnlineMode()
+
+    idleTimer = setTimeout(() => {
+      enterOfflineMode()
+      idleTimer = null
+    }, IDLE_TIMEOUT)
+  }
+
   let ws = null
   let reconnectTimer = null
   let reconnectAttempts = 0
   const MAX_RECONNECT_ATTEMPTS = 5
+
+  async function handleSpeakMessage(type, data, id) {
+    resetIdleTimer()
+
+    // 检查是否刚被唤醒
+    const now = Date.now()
+    if (wakeupTime && now - wakeupTime < WAKEUP_DELAY) {
+      // 缓存命令
+      pendingCommands.push({ type, data, id })
+      return null // 不发送响应，等执行时再发送
+    } else {
+      if (type === 'speak') {
+        return await speak(data.text)
+      } else {
+        return await speakStream(data.text, data.isStart, data.isEnd)
+      }
+    }
+  }
+
+  async function handleInteractiveIdleMessage() {
+    const wasOfflineMode = !isOnlineMode
+
+    resetIdleTimer()
+
+    const result = await interactiveIdle()
+
+    // 只有当从离线模式切换到在线模式时才缓存命令
+    if (wasOfflineMode) {
+      wakeupTime = Date.now()
+      cancelPendingCommands()
+      wakeupExecutionTimer = setTimeout(() => {
+        executePendingCommands()
+        wakeupExecutionTimer = null
+      }, WAKEUP_DELAY)
+    } else {
+      wakeupTime = null
+      cancelPendingCommands()
+    }
+
+    return result
+  }
 
   function connectWebSocket() {
     if (typeof window.__WS_PORT__ === 'undefined') {
@@ -393,15 +547,12 @@
               break
 
             case 'speak':
-              result = await speak(data.text)
-              break
-
             case 'speakStream':
-              result = await speakStream(data.text, data.isStart, data.isEnd)
+              result = await handleSpeakMessage(type, data, id)
               break
 
             case 'interactiveIdle':
-              result = await interactiveIdle()
+              result = await handleInteractiveIdleMessage()
               break
 
             case 'getState':
@@ -412,7 +563,7 @@
               result = { success: false, error: '未知的消息类型: ' + type }
           }
 
-          if (id) {
+          if (id && result !== null) {
             sendMessage({ type: 'response', id, result })
           }
         } catch (error) {
@@ -463,14 +614,10 @@
   connectWebSocket()
 
   window.addEventListener('beforeunload', () => {
-    if (reconnectTimer) {
-      clearTimeout(reconnectTimer)
-    }
-    if (subtitleHideTimer) {
-      clearTimeout(subtitleHideTimer)
-    }
-    if (ws) {
-      ws.close()
-    }
+    if (reconnectTimer) clearTimeout(reconnectTimer)
+    if (subtitleHideTimer) clearTimeout(subtitleHideTimer)
+    if (idleTimer) clearTimeout(idleTimer)
+    if (wakeupExecutionTimer) clearTimeout(wakeupExecutionTimer)
+    if (ws) ws.close()
   })
 })()
