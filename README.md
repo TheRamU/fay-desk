@@ -4,7 +4,7 @@
 
 # FayDesk
 
-一个集成了动态壁纸与数字人的高性能现代化桌面应用
+一个集成了动态壁纸与数字人的高性能数字人桌面应用框架
 
 [![Release](https://img.shields.io/github/v/release/TheRamU/fay-desk)](https://github.com/TheRamU/fay-desk/releases)
 [![Downloads](https://img.shields.io/github/downloads/TheRamU/fay-desk/total)](https://github.com/TheRamU/fay-desk/releases)
@@ -32,6 +32,8 @@
 ### 🎨 动态壁纸
 
 <img src="docs/images/features/wallpapers.jpg" alt="wallpapers" width="800">
+
+<img src="docs/images/features/wallpaper_demo.jpg" alt="wallpaper_demo" width="800">
 
 应用内置动态壁纸资源库，所有壁纸均采用 HTML5 技术实现，可以通过简单的操作切换壁纸，也可以导入自定义的壁纸包，打造专属桌面环境。
 
@@ -63,13 +65,13 @@
 - 获取兼容 OpenAI API 密钥，推荐使用 [DeepSeek](https://platform.deepseek.com/api_keys)
 - 打开设置页面
 - 进入 "OpenAI API" 设置
-- 填入你的 `API Key` 和 **代理地址**（如使用代理，这里选择DeekSeek）
+- 填入你的 `API Key` 和 **代理地址**（如使用代理，这里选择DeepSeek）
 
 **配置 Xmov SDK（可选）**
 
 - 获取 Xmov SDK 密钥
   - 前往 [魔珐星云](https://c.c1nd.cn/9C9WW) 创建账号
-  - 进入 [应用管理](https://xingyun3d.com/workspace/application-manage)，创建一个新的应用
+  - 进入 [应用管理](https://xingyun3d.com/workspace/application-manage?utm_campaign=1029launch&utm_source=FAYguo)，创建一个新的应用
   - 点击右上角 “App密钥” 按钮获取 `App ID` 和 `App Secret`
 - 打开设置页面
 - 进入 "Xmov SDK" 设置
@@ -92,9 +94,9 @@
 ## 📋 开发计划
 
 - [x] 数字人壁纸
+- [x] 数字人休眠机制
 - [ ] 语音交互
 - [ ] AI 生成壁纸
-- [ ] 离线模式
 - [ ] 仿生记忆
 - [ ] MCP 支持
 
@@ -150,8 +152,3 @@ pnpm build:win
 ## ⛺ 微信交流群
 
 <img src="docs/images/wechat.png" alt="wechat" width="500">
-
----
-
-如果这个项目对你有帮助，请给一个 ⭐ Star~
-
